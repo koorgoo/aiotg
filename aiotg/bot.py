@@ -540,9 +540,10 @@ class Bot:
                 return handler(iq, match)
         return self._default_inline(iq)
 
-    def _process_callback_query(self, query):
+    def _process_callback_query(self, update):
+        query = update["callback_query"]
         chat = Chat.from_message(self, query["message"])
-        cq = CallbackQuery(self, query)
+        cq = CallbackQuery(self, query, update)
         for patterns, handler in self._callbacks:
             match = re.search(patterns, cq.data, re.I)
             if match:
@@ -576,7 +577,7 @@ class Bot:
             if "inline_query" in update:
                 coro = self._process_inline_query(update["inline_query"])
             elif "callback_query" in update:
-                coro = self._process_callback_query(update["callback_query"])
+                coro = self._process_callback_query(update)
 
         if coro:
             asyncio.ensure_future(coro)
@@ -616,11 +617,12 @@ class TgInlineQuery(InlineQuery):
 
 
 class CallbackQuery:
-    def __init__(self, bot, src):
+    def __init__(self, bot, src, update):
         self.bot = bot
         self.query_id = src['id']
         self.data = src['data']
         self.src = src
+        self.update = update
 
     def answer(self, **options):
         return self.bot.api_call(
