@@ -521,7 +521,7 @@ class Bot:
             return
 
         for patterns, handler in self._commands:
-            m = re.search(patterns, message["text"], re.I)
+            m = re.search(patterns, message["text"], re.I | re.DOTALL)
             if m:
                 self.track(message, handler.__name__)
                 return handler(chat, m)
